@@ -23,7 +23,7 @@ route.get('/:id', async (req, res) => {
                 post
             });
         } else {
-           return res.status(404).json({
+            return res.status(404).json({
                 message: "The post with the specified ID does not exist."
             })
         }
@@ -42,7 +42,7 @@ route.delete('/:id', async (req, res) => {
                 message: 'post successfully deleted'
             });
         } else {
-           return res.status(404).json({
+            return res.status(404).json({
                 message: "The post with the specified ID does not exist."
             })
         }
@@ -53,7 +53,7 @@ route.delete('/:id', async (req, res) => {
     }
 })
 
-route.post('/', async(req, res) => {
+route.post('/', async (req, res) => {
     try {
         const { title, contents } = req.body;
         const newPost = { title, contents }
@@ -74,7 +74,7 @@ route.post('/', async(req, res) => {
     }
 });
 
-route.get('/:id/comments', async(req, res) => {
+route.get('/:id/comments', async (req, res) => {
     try {
         const { id } = req.params;
         const post = await postsModel.findById(id);
@@ -88,7 +88,49 @@ route.get('/:id/comments', async(req, res) => {
         }
     } catch (error) {
         res.status(500).json({
-            error: "The comments information could not be retrieved." 
+            error: "The comments information could not be retrieved."
+        })
+    }
+});
+
+route.post('/:id/comments', async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    const { text } = req.body;
+    if (Number.isNaN(id) || id % 1 != 0 || id < 0) {
+        return res.status(400).json({
+            message: 'Invalid id provided'
+        })
+    }
+    try {
+        const post = await postsModel.findById(id);
+        if (post.length) {
+            if (!text) {
+               return res.status(400).json({
+                errorMessage: "Please provide text for the comment."
+               }) 
+            }
+            const newComment = {
+                text,
+                post_id: id
+            }
+            try {
+                const newCommentId = await postsModel.insertComment(newComment);
+                const newCommentData = await postsModel.findCommentById(newCommentId.id);
+                return res.status(201).json(newCommentData);
+            } catch (error) {
+                console.log(error);
+                return res.status(500).json({
+                    error: "There was an error while saving the comment to the database"
+                })
+            }
+        }
+        return res.status(404).json({
+            message: "The post with the specified ID does not exist." 
+        })
+
+    } catch (error) {
+        res.status(500).json({
+            errorerror: 'The post information could not be retrieved.',
         })
     }
 })
