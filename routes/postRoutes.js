@@ -64,8 +64,10 @@ route.post('/', async (req, res) => {
             })
         }
         const validPost = await postsModel.insert(req.body);
+        const newPostData = await postsModel.findById(validPost.id)
         res.status(201).json({
-            newPost
+            //newPost
+            newPostData
         })
     } catch (error) {
         res.status(500).json({
@@ -134,6 +136,35 @@ route.post('/:id/comments', async (req, res) => {
         })
     }
 })
+
+route.put('/:id', async(req, res) => {
+    const id = parseInt(req.params.id, 10);
+    const { body } = req;
+    try {
+        const post = await postsModel.findById(id);
+        if (post.length) {
+            if(!body.title || !body.contents) {
+                return res.status(400).json({
+                    status: 400,
+                    errorMessage: "Please provide title and content for the user."
+                })
+            }
+            const updatedPost = await postsModel.update(id, body);
+            return res.status(200).json(updatedPost)
+        } else {
+            return res.status(404).json({
+                status: 400,
+                message: "The post with the specified ID does not exist."
+            })
+        }
+    } catch (error) {
+        return res.status(500).json({
+            status: 500,
+            error: "The post could not be modified."
+        })
+    }
+})
+
 
 
 module.exports = route;
