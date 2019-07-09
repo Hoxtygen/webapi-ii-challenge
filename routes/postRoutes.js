@@ -72,6 +72,25 @@ route.post('/', async(req, res) => {
             error: "There was an error while saving the post to the database"
         })
     }
+});
+
+route.get('/:id/comments', async(req, res) => {
+    try {
+        const { id } = req.params;
+        const post = await postsModel.findById(id);
+        if (post.length) {
+            const posts = await postsModel.findPostComments(id);
+            res.status(200).json(posts);
+        } else {
+            res.status(404).json({
+                message: "The post with the specified ID does not exist."
+            })
+        }
+    } catch (error) {
+        res.status(500).json({
+            error: "The comments information could not be retrieved." 
+        })
+    }
 })
 
 
